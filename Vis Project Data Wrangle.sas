@@ -1,6 +1,9 @@
+/*When adjusting this line for your personal directories, copy it and comment out this one for
+  ease of switching when pushing to GitHub.*/
 %let path = C:\Users\Bill\Documents\NCSU\Course Work\Fall\Visualization\Well_Data;
 
-/*Importing to a Permenat Data set. Update your path to your own local drive*/
+/*Importing to a Permenat Data set. Update your path to your own local drive
+  Right now, each well data set has to be manually changed in this step and the proc sql step*/
 PROC IMPORT OUT= Well_Data DATAFILE= "&path.\PB-1680_T.xlsx"
             DBMS=xlsx REPLACE;
      SHEET="Well"; 
@@ -50,8 +53,7 @@ data ideal(keep = date hour);
 	end;
 run;
 
-/*Open csv file*/
-ods csvall file="&path.\All Wells.csv";
+ods csv file="&path.\All Wells.csv";
 
 /*Merge all wells into the same data set*/
 data visproj.all_wells;
@@ -72,5 +74,5 @@ data visproj.all_wells;
 	by date hour;
 run;
 
-ods csvall close;	
+ods csv close;	
 
