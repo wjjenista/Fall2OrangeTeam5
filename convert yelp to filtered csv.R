@@ -1,9 +1,11 @@
 library(jsonlite)
+#install.packages('tidyverse')
 library(tidyverse)
 
 #Import business.json file 
 
-business <- 'C:\\Users\\Melissa Sandahl\\Desktop\\yelp_academic_dataset_business.json'
+#business <- 'C:\\Users\\Melissa Sandahl\\Desktop\\yelp_academic_dataset_business.json'
+business = "C:\\Users\\rnwyn\\OneDrive\\Documents\\Text Mining\\yelp_academic_dataset_business.json"
 bus_data <- stream_in(file(business))
 
 # check structure: some variables are dataframes themselves
@@ -19,8 +21,10 @@ write_csv(bus_flat, path = "yelp_businesses.csv")
 
 
 # Once CSV files are written, import data from here
-business <- read_csv("C:\\Users\\Melissa Sandahl\\Desktop\\yelp_businesses.csv")
-reviews <- read_csv("C:\\Users\\Melissa Sandahl\\Desktop\\yelp_academic_dataset_review.csv")
+# business <- read_csv("C:\\Users\\Melissa Sandahl\\Desktop\\yelp_businesses.csv")
+# reviews <- read_csv("C:\\Users\\Melissa Sandahl\\Desktop\\yelp_academic_dataset_review.csv")
+reviews = read_csv("C:\\Users\\rnwyn\\OneDrive\\Documents\\Text Mining\\yelp_academic_dataset_review.csv")
+business = read_csv("C:\\Users\\rnwyn\\OneDrive\\Documents\\Text Mining\\yelp_businesses.csv")
 
 # filter for businesses in NC, remove entries not in Charlotte area 
 # Non-charlotte locations found by mapping businesses in Tableau
@@ -40,4 +44,35 @@ nc_reviews <- reviews %>%
 
 #save this dataset. File size down to 230MB!
 write_csv(nc_reviews, path = "yelp_nc_reviews.csv")
+
+
+###############################
+#Open new working files
+nc_reviews = read_csv("C:\\Users\\rnwyn\\OneDrive\\Documents\\Text Mining\\yelp_nc_reviews.csv")
+nc_businesses = read_csv("C:\\Users\\rnwyn\\OneDrive\\Documents\\Text Mining\\yelp_nc_businesses.csv")
+
+
+#Filter categories variable in business dataset to only thos including Food and Restaurants. Had to Exclude those listed as Grocery.
+keep_c = nc_businesses %>%
+  filter(grepl('Food|Restaurant', categories) & !grepl('Grocery', categories))
+keep_categories = keep_c$business_id
+
+#Filter nc_reviews off those categories to include only reviews on restaurants
+nc_food_reviews <- nc_reviews %>%
+  filter(business_id %in% keep_categories)
+
+#write this dataset. File down to 158MB
+write_csv(nc_food_reviews, path = "yelp_nc_food_reviews.csv")
+
+
+#Filtering the reviews for those talking about parking
+nc_food_reviews_parking = nc_food_reviews %>%
+  filter(grepl('park|Park', text))
+
+#writing this dataset. File down to 13.3 MB. 13,515 observations. 
+write_csv(nc_food_reviews_parking, path = "yelp_nc_parking_reviews.csv")
+
+
+
+
 
