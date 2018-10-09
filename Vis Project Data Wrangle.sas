@@ -53,8 +53,6 @@ data ideal(keep = date hour);
 	end;
 run;
 
-ods csv file="&path.\All Wells.csv";
-
 /*Merge all wells into the same data set*/
 data visproj.all_wells;
 	merge   ideal
@@ -74,5 +72,79 @@ data visproj.all_wells;
 	by date hour;
 run;
 
-ods csv close;	
+/* Normalize all the well data*/
+proc sql;
+	create table visproj.normwells as
+	select date, hour, (f179-mean(f179))/std(f179) as f179N,
+					   (f319-mean(f319))/std(f319) as f319N,
+					   (f45-mean(f45))/std(f45) as f45N,
+					   (g1220t-mean(g1220t))/std(g1220t) as g1220tN,
+					   (g1260t-mean(g1260t))/std(g1260t) as g1260tN,
+					   (g2147t-mean(g2147t))/std(g2147t) as g2147tN,
+					   (g2866t-mean(g2866t))/std(g2866t) as g2866tN,
+					   (g3549-mean(g3549))/std(g3549) as g3549N,
+					   (g561t-mean(g561t))/std(g561t) as g561tN,
+					   (g580a-mean(g580a))/std(g580a) as g580aN,
+					   (g852-mean(g852))/std(g852) as g852N,
+					   (g860-mean(g860))/std(g860) as g860N,
+					   (pb1680t-mean(pb1680t))/std(pb1680t) as pb1680tN
+	from visproj.all_wells;
+quit;	
 
+/* Impute missing values using */
+data visproj.imputed_normal;
+	set visproj.normwells;
+	where date > "30Sep2007"d;
+	impute = mean(f179n, f319n, f45n, g1220tn, g1260tn, g2147tn, g2866tn, g3549n,
+				  g561tn, g580an, g852n, g860n, pb1680tn);
+	if f179n=. then f179n = impute;
+	if f319n=. then f319n = impute;
+	if f45n=. then f45n = impute;
+	if g1220tn=. then g1220tn = impute;
+	if g1260tn=. then g1260tn = impute;
+	if g2147tn=. then g2147tn = impute;
+	if g2866tn=. then g2866tn = impute;
+	if g3549n=. then g3549n = impute;
+	if g561tn=. then g561tn = impute;
+	if g580an=. then g580an = impute;
+	if g852n=. then g852n = impute;
+	if g860n=. then g860n = impute;
+	if pb1680tn=. then pb1680tn = impute;
+run;
+
+/*Calculate mean and standard deviation of original time series*/
+proc sql;
+	create table visproj.stats as
+	select mean(f179) as f179m, std(f179) as f179sd,
+	       mean(f319) as f319m, std(f319) as f319sd,
+		   mean(f45) as f45m, std(f45) as f45sd,
+		   mean(g1220t) as g1220tm, std(g1220t) as g1220tsd,
+		   mean(g1260t) as g1260tm, std(g1260t) as g1260tsd,
+		   mean(g2147t) as g2147tm, std(g2147t) as g2147tsd,
+		   mean(g2866t) as g2866tm, std(g2866t) as g2866tsd,
+		   mean(g3549) as g3549m, std(g3549) as g3549sd,
+		   mean(g561t) as g561tm, std(g561t) as g561tsd,
+		   mean(g580a) as g580am, std(g580a) as g580asd,
+		   mean(g852) as g852m, std(g852) as g852sd,
+		   mean(g860) as g860m, std(g860) as g860sd,
+		   mean(pb1680t) as pb1680tm, std(pb1680t) as pb1680tsd
+	from visproj.all_wells;
+quit;
+
+/*Change normalized data back to original with imputed values*/
+data visproj.all_wells_imputed;
+	set visproj.imputed_normal;
+	f179 = 0.5413844879*f179n+0.7023787213;
+	f319 = 0.4008264697*f319n+0.82223807;
+	f45 = 0.59710404119*f45n+0.7396640008;
+	g1220t = 0.6814937506*g1220tn+0.3053106933;
+	g1260t = 1.2930594085*g1260tn+3.7342019101;
+	g2147t = 0.8953352697*g2147tn+3.1636347071;
+	g2866t = 1.5055436803*g2866tn+5.0151520317;
+	g3549 = 0.3267567924*g3549n+0.263653971;
+	g561t = 0.7146342207*g561tn+0.7814106663;
+	g580a = 0.4781340228*g580an+1.0335924412;
+	g852 = 0.5289504339*g852n+0.7333016528;
+	g860 = 0.4091936005*g860n+1.0592613613;
+	pb1680t = 1.1237183036*pb1680tn+1.0168947464;
+run;
