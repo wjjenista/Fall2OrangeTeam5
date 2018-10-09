@@ -1,5 +1,7 @@
 libname HW 'C:\Users\Melissa Sandahl\OneDrive\Documents\School\MSA courses\AA502\Data Viz\Well_Data\Well Data';
 %let path = C:\Users\Melissa Sandahl\OneDrive\Documents\School\MSA courses\AA502\Data Viz\Well_Data\Well Data;
+libname HW 'C:\Users\Bill\Documents\NCSU\Course Work\Fall\Time Series\Homework\Time Series 2';
+%let path = C:\Users\Bill\Documents\NCSU\Course Work\Fall\Time Series\Homework\Time Series 2;
 
 
 /*Plot time series*/
