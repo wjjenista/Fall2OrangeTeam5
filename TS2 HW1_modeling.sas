@@ -186,3 +186,42 @@ quit;
 /*still not close to white noise*/
 
 
+
+
+/*Testing without seasonality
+Only differencing at lag 1 with AR, MA terms*/
+/*Check adf test to see if more than 1 difference needed*/
+
+proc arima data=HW.merged_imputed plot=all;
+identify var=imputed(1) nlag=60 stationarity=(adf=2);
+estimate method=ml;
+*forecast back=168 lead=168;
+run;
+quit;
+
+
+/*Automated search for AR, MA terms*/
+
+proc arima data=HW.merged_imputed plot=all;
+	identify var=imputed(1) nlag=40 minic scan esacf P=(0:60) Q=(0:60);
+	estimate method=ml;
+	*forecast back=168 lead=168;
+run;
+quit;
+
+/*Trying different combinations of AR, MA terms
+These two models were the best*/
+
+proc arima data=HW.merged_imputed plot=all;
+	identify var=imputed(1) nlag=80;
+	estimate p=26 q=2 method=ml;
+	forecast back=168 lead=168;
+run;
+quit;
+
+proc arima data=HW.merged_imputed plot=all;
+	identify var=imputed(1) nlag=80;
+	estimate p=6 q=4 method=ml;
+	forecast back=168 lead=168;
+run;
+quit;
