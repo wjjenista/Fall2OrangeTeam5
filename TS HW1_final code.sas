@@ -125,7 +125,7 @@ Data HW.Base_Time;
 run;
 data HW.Base_Time;
 set HW.Base_Time;
-if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour >= 10) then delete;
+if (Year = 2018) and (Month = 6) and (Day >= 13) then delete;
 run;
 
 data HW.Base_Time;
@@ -187,8 +187,11 @@ proc freq data = HW.Merged_Imputed;
 	where Imputed = .;
 run;
 
-
-
+/*Deleteing the last 4 days off of the dataset as requested*/
+data HW.Merged_Imputed;
+	set HW.Merged_Imputed;
+	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
+run;
 
 /*Plot time series*/
 proc timeseries data=HW.merged_imputed plots=(series decomp);
@@ -234,8 +237,7 @@ quit;
 Data Pre_MAPE;
 	set Residuals;
 	Pre_MAPE = abs(RESIDUAL/Imputed);
-/*	if _n_ > 93623;*/
-	if _n_ > 93733;
+	if _n_ > 93553;
 run;
 
 Proc sql;
@@ -244,4 +246,5 @@ From (Select sum(Pre_MAPE) as Sum_Residuals,
 count(Pre_Mape) as Obs from Pre_MAPE) as sum; quit;
 
 /*MAPE */
-/*0.013847 */
+/*0.032448 */
+
