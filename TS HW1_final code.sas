@@ -220,6 +220,15 @@ forecast back=168 lead=168;
 run;
 quit;
 
+/* Other model */
+
+proc arima data=HW.merged_imputed plot=all;
+	identify var=imputed(1,2184) nlag = 30;
+	estimate p =6 q =9 method=ml;
+	forecast back=168 lead=168 out = Residuals;
+run;
+quit;
+
 
 /*AR, MA terms*/
 
