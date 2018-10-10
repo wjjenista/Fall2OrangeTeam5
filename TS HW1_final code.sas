@@ -201,13 +201,8 @@ run;
 /*Deleteing the last 4 days off of the dataset as requested*/
 data HW.Merged_Imputed;
 	set HW.Merged_Imputed;
-<<<<<<< HEAD
 	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
 	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
-=======
-	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
-	if (Year = 2018) and (Month = 6) and (Day = 8) and (Hour>=10) then delete;
->>>>>>> 97ee8d509d78b08e546e334484b44cde3ffa4b75
 run;
 
 /*Plot time series*/
@@ -233,15 +228,6 @@ proc arima data=HW.merged_imputed plot=all;
 identify var=imputed(1) nlag=60 stationarity=(adf=2);
 estimate method=ml;
 forecast back=168 lead=168;
-run;
-quit;
-
-/* Other model */
-
-proc arima data=HW.merged_imputed plot=all;
-	identify var=imputed(1,2184) nlag = 30;
-	estimate p =6 q =9 method=ml;
-	forecast back=168 lead=168 out = Residuals;
 run;
 quit;
 
@@ -272,6 +258,5 @@ From (Select sum(Pre_MAPE) as Sum_Residuals,
 count(Pre_Mape) as Obs from Pre_MAPE) as sum; quit;
 
 /*MAPE */
-/*0.036947
-*/
+/*0.036947*/
 
