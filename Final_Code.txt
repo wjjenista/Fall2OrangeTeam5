@@ -61,8 +61,6 @@ write_csv(well4, path= "well_imputed.csv")
 
 
 
-
-
 /************************************************
 ***************************************************
 ***************************************************
@@ -89,7 +87,7 @@ PROC IMPORT OUT= HW.Well_Data DATAFILE= "&path.\G-2866_T.xlsx"
      GETNAMES=YES;
 RUN;
 
-/*Importing the IMputed values from R Code*/
+/*Importing the Imputed values from R Code*/
 PROC IMPORT OUT= HW.Well_Imputed DATAFILE= "C:\Users\derri\Documents\NC State Classes\Time Series\Data\well_imputed.csv" 
             DBMS=csv REPLACE; 
      GETNAMES=YES;
@@ -267,6 +265,7 @@ run;
 data HW.Merged_Imputed;
 	set HW.Merged_Imputed;
 	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
+	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
 run;
 
 /*Plot time series*/
@@ -313,7 +312,7 @@ quit;
 Data Pre_MAPE;
 	set Residuals;
 	Pre_MAPE = abs(RESIDUAL/Imputed);
-	if _n_ > 93553;
+	if _n_ > 93513;
 run;
 
 Proc sql;
@@ -322,5 +321,5 @@ From (Select sum(Pre_MAPE) as Sum_Residuals,
 count(Pre_Mape) as Obs from Pre_MAPE) as sum; quit;
 
 /*MAPE */
-/*0.032448 */
+/*0.036947*/
 
