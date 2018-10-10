@@ -1,3 +1,14 @@
+/************************************************
+***************************************************
+***************************************************
+
+This part was coded in SAS
+
+***************************************************
+***************************************************
+**************************************************/
+
+
 libname HW 'C:\Users\Melissa Sandahl\OneDrive\Documents\School\MSA courses\AA502\Data Viz\Well_Data\Well Data';
 %let path = C:\Users\Melissa Sandahl\OneDrive\Documents\School\MSA courses\AA502\Data Viz\Well_Data\Well Data;
 libname HW 'C:\Users\Bill\Documents\NCSU\Course Work\Fall\Time Series\Homework\Time Series 2';
@@ -191,6 +202,7 @@ run;
 data HW.Merged_Imputed;
 	set HW.Merged_Imputed;
 	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
+	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
 run;
 
 /*Plot time series*/
@@ -237,7 +249,7 @@ quit;
 Data Pre_MAPE;
 	set Residuals;
 	Pre_MAPE = abs(RESIDUAL/Imputed);
-	if _n_ > 93553;
+	if _n_ > 93513;
 run;
 
 Proc sql;
@@ -246,5 +258,6 @@ From (Select sum(Pre_MAPE) as Sum_Residuals,
 count(Pre_Mape) as Obs from Pre_MAPE) as sum; quit;
 
 /*MAPE */
-/*0.032448 */
+/*0.036947
+*/
 
