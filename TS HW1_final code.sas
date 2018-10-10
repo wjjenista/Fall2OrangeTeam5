@@ -125,7 +125,7 @@ Data HW.Base_Time;
 run;
 data HW.Base_Time;
 set HW.Base_Time;
-if (Year = 2018) and (Month = 6) and (Day >= 13) then delete;
+if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour >= 10) then delete;
 run;
 
 data HW.Base_Time;
@@ -234,7 +234,8 @@ quit;
 Data Pre_MAPE;
 	set Residuals;
 	Pre_MAPE = abs(RESIDUAL/Imputed);
-	if _n_ > 93623;
+/*	if _n_ > 93623;*/
+	if _n_ > 93733;
 run;
 
 Proc sql;
@@ -243,4 +244,4 @@ From (Select sum(Pre_MAPE) as Sum_Residuals,
 count(Pre_Mape) as Obs from Pre_MAPE) as sum; quit;
 
 /*MAPE */
-/*0.016132 */
+/*0.013847 */
