@@ -13,7 +13,7 @@ PROC IMPORT OUT= HW.Well_Data DATAFILE= "&path.\G-2866_T.xlsx"
      GETNAMES=YES;
 RUN;
 
-/*Importing the IMputed values from R Code*/
+/*Importing the Imputed values from R Code*/
 PROC IMPORT OUT= HW.Well_Imputed DATAFILE= "C:\Users\derri\Documents\NC State Classes\Time Series\Data\well_imputed.csv" 
             DBMS=csv REPLACE; 
      GETNAMES=YES;
@@ -190,7 +190,8 @@ run;
 /*Deleteing the last 4 days off of the dataset as requested*/
 data HW.Merged_Imputed;
 	set HW.Merged_Imputed;
-	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
+	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
+	if (Year = 2018) and (Month = 6) and (Day = 8) and (Hour>=10) then delete;
 run;
 
 /*Plot time series*/
