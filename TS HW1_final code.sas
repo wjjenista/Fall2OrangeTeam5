@@ -2,6 +2,7 @@ libname HW 'C:\Users\Melissa Sandahl\OneDrive\Documents\School\MSA courses\AA502
 %let path = C:\Users\Melissa Sandahl\OneDrive\Documents\School\MSA courses\AA502\Data Viz\Well_Data\Well Data;
 libname HW 'C:\Users\Bill\Documents\NCSU\Course Work\Fall\Time Series\Homework\Time Series 2';
 %let path = C:\Users\Bill\Documents\NCSU\Course Work\Fall\Time Series\Homework\Time Series 2;
+/*Derrick' Path*/
 libname HW 'C:\Users\derri\Documents\NC State Classes\Time Series\Homework 1';
 %let path = C:\Users\derri\Documents\NC State Classes\Time Series\Homework 1;
 
@@ -169,6 +170,11 @@ data missing;
 	where Corrected = .;
 run;
 
+/******************************
+*******************************
+	   *Finish Merging*
+*******************************
+******************************/
 
 /*Horizontal Merge of Melissa's Data*/
 Data HW.Merged_Imputed (drop = datetime well_avg);
@@ -176,7 +182,7 @@ merge HW.Well_Data_Monthly2 HW.Well_Imputed;
 run;
 
 /*Checking to make sure that the imputed worked*/
-proc freq data = HW.Merged_Imputed_with_sine;
+proc freq data = HW.Merged_Imputed;
 	tables Imputed;
 	where Imputed = .;
 run;
@@ -237,4 +243,4 @@ From (Select sum(Pre_MAPE) as Sum_Residuals,
 count(Pre_Mape) as Obs from Pre_MAPE) as sum; quit;
 
 /*MAPE */
-/*0.039384 */
+/*0.016132 */
