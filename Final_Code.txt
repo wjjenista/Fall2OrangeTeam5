@@ -1,3 +1,68 @@
+
+#################################################################################
+#################################################################################
+#This Section was coded in R 
+#Use this code to get imputed values 
+#################################################################################
+#################################################################################
+
+
+
+
+# Imputing missing hours in well data #############
+
+install.packages("imputeTS")
+library(imputeTS)
+library(readxl)
+library(tidyverse)
+library(lubridate)
+
+file.dir <- "C:\\Users\\Melissa Sandahl\\OneDrive\\Documents\\School\\MSA courses\\AA502\\Data Viz\\Well_Data\\Well Data\\G-2866_T.xlsx"
+
+well <- read_excel(file.dir, sheet=3)
+
+# Aggregate by hour
+
+well2 <- well %>%
+  mutate(time_2 = hour(time)) %>% 
+  unite(datetime, date, time_2, sep = " ", remove = FALSE) %>%
+  mutate(datetime = ymd_h(datetime)) %>%
+  select(datetime, depth = Corrected) 
+
+well3 <- well2 %>% 
+  group_by(datetime) %>% 
+  summarise(well_avg = mean(depth))
+
+
+
+# Create sequence of dates by hour
+
+datetime <- seq(ymd_h("2007-10-01 01"), ymd_h("2018-06-12 23"), by = '1 hour')
+datetime <- as.data.frame(datetime)
+
+# Join sequence with well data to find missing hours
+well4 <- well3 %>%
+  right_join(datetime)
+
+
+#Impute missing hours
+well4$imputed <- na.kalman(well4$well_avg)
+
+
+#Plot data with imputed values
+ggplot(well4, aes(datetime, imputed)) +
+  geom_line(color = "blue") +
+  theme_bw() +
+  labs(x = "Date And Time (in hours)", y = "Avg Depth of Well (in feet)", 
+       title = "Avg Depth of Well From 2007-2018")
+
+#Write data to csv
+write_csv(well4, path= "well_imputed.csv")
+
+
+
+
+
 /************************************************
 ***************************************************
 ***************************************************
@@ -24,7 +89,7 @@ PROC IMPORT OUT= HW.Well_Data DATAFILE= "&path.\G-2866_T.xlsx"
      GETNAMES=YES;
 RUN;
 
-/*Importing the Imputed values from R Code*/
+/*Importing the IMputed values from R Code*/
 PROC IMPORT OUT= HW.Well_Imputed DATAFILE= "C:\Users\derri\Documents\NC State Classes\Time Series\Data\well_imputed.csv" 
             DBMS=csv REPLACE; 
      GETNAMES=YES;
@@ -201,13 +266,7 @@ run;
 /*Deleteing the last 4 days off of the dataset as requested*/
 data HW.Merged_Imputed;
 	set HW.Merged_Imputed;
-<<<<<<< HEAD
 	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
-	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
-=======
-	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
-	if (Year = 2018) and (Month = 6) and (Day = 8) and (Hour>=10) then delete;
->>>>>>> 97ee8d509d78b08e546e334484b44cde3ffa4b75
 run;
 
 /*Plot time series*/
@@ -236,15 +295,6 @@ forecast back=168 lead=168;
 run;
 quit;
 
-/* Other model */
-
-proc arima data=HW.merged_imputed plot=all;
-	identify var=imputed(1,2184) nlag = 30;
-	estimate p =6 q =9 method=ml;
-	forecast back=168 lead=168 out = Residuals;
-run;
-quit;
-
 
 /*AR, MA terms*/
 
@@ -263,7 +313,7 @@ quit;
 Data Pre_MAPE;
 	set Residuals;
 	Pre_MAPE = abs(RESIDUAL/Imputed);
-	if _n_ > 93513;
+	if _n_ > 93553;
 run;
 
 Proc sql;
@@ -272,6 +322,5 @@ From (Select sum(Pre_MAPE) as Sum_Residuals,
 count(Pre_Mape) as Obs from Pre_MAPE) as sum; quit;
 
 /*MAPE */
-/*0.036947
-*/
+/*0.032448 */
 
