@@ -1,6 +1,7 @@
 library(jsonlite)
 #install.packages('tidyverse')
 library(tidyverse)
+library(dplyr)
 
 #Import business.json file 
 
@@ -72,7 +73,13 @@ nc_food_reviews_parking = nc_food_reviews %>%
 #writing this dataset. File down to 13.3 MB. 13,515 observations. 
 write_csv(nc_food_reviews_parking, path = "yelp_nc_parking_reviews.csv")
 
+#reopening these
+nc_businesses = read_csv('yelp_nc_businesses.csv')
+nc_food_reviews = read_csv('yelp_nc_food_reviews.csv')
+nc_parking = read_csv('yelp_nc_parking_reviews.csv')
 
-
+#joining the business dataset with the reviews dataset
+food_bus_reviews = right_join(nc_businesses,nc_food_reviews, by = 'business_id')
+parking_food_bus_reviews = right_join(nc_businesses,nc_parking, by = 'business_id')
 
 
