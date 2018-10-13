@@ -316,7 +316,26 @@ quit;
                ARIMAX
 ********************************************/
 
+proc arima data=plot;
+identify var=imputed(1) nlag=60 crosscorr=(rain);
+estimate input=(rain) p=2 method=ML;
+forecast out=test;
+run;
+quit;
 
+
+proc arima data=test;
+identify var=residual stationarity=(adf=2);
+run;
+quit;
+/*ADF test was significant -> stationary*/
+
+proc arima data=plot;
+identify var=imputed(1) nlag=60 crosscorr=(rain);
+estimate input=(rain) p=2 q=7 method=ML;
+forecast back=168 lead=168 out=test;
+run;
+quit;
 
 /********************************************
               Calculating MAPEs
