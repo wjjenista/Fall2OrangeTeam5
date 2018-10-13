@@ -245,6 +245,19 @@ data HW.Merged_Imputed;
 	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
 run;
 
+/*Merge rain data with well data*/
+data HW.wellrain;
+	merge hw.merged_imputed hw.rain_data_hourly;
+	by year month day hour;
+run;
+
+/*Check for missing values in rain*/
+proc freq data = hw.wellrain;
+	tables rain;
+	where rain = .;
+run;
+/*Results: no missing values for Rain -- Would have put zero for missing values as most likely there was no rain*/
+
 /*Plot time series*/
 proc timeseries data=HW.merged_imputed plots=(series decomp);
 	var imputed;
@@ -258,11 +271,29 @@ proc timeseries data=HW.merged_imputed plots=(series decomp) seasonality=8766;
 run;
 quit;
 
-
+/********************************************
 /********************************************
               Modeling
+*********************************************
 ********************************************/
 
+/********************************************
+                ESM
+********************************************/
+
+/*Additive seasonal with Trend*/   *Derrick, I just dumped this in as a place holder . . . Bill;
+ods output PerformanceStatistics=Print_Add_Seasonal_Trend;/* This will output the MAPE and other values to the called dataset for comparison */
+proc esm data=HW.Well_Data_Monthly print=all plot=all 
+		 seasonality=12 back=6 lead=6 outfor=HW.Model_Add_Seasonal_Trend; 
+	forecast Corrected / model=addwinters; 
+	title "Additive Seasonal with Trend Model for Well G2866-T";
+run;
+quit;
+title;
+
+/********************************************
+               ARIMA
+********************************************/
 /*Random walk*/
 proc arima data=HW.merged_imputed plot=all;
 identify var=imputed(1) nlag=60 stationarity=(adf=2);
@@ -281,10 +312,14 @@ proc arima data=HW.merged_imputed plot=all;
 run;
 quit;
 
+/********************************************
+               ARIMAX
+********************************************/
+
 
 
 /********************************************
-              Calculating MAPE
+              Calculating MAPEs
 ********************************************/
 Data Pre_MAPE;
 	set Residuals;
