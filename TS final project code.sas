@@ -24,6 +24,13 @@ PROC IMPORT OUT= HW.Well_Data DATAFILE= "&path.\G-2866_T.xlsx"
      GETNAMES=YES;
 RUN;
 
+/*Importing rain data*/
+PROC IMPORT OUT= HW.Rain_Data DATAFILE= "&path.\G-2866_T.xlsx" 
+            DBMS=xlsx REPLACE;
+     SHEET="Rain"; 
+     GETNAMES=YES;
+RUN;
+
 /*Importing the Imputed values from R Code*/
 PROC IMPORT OUT= HW.Well_Imputed DATAFILE= "C:\Users\derri\Documents\NC State Classes\Time Series\Data\well_imputed.csv" 
             DBMS=csv REPLACE; 
@@ -75,10 +82,43 @@ Case
 From HW.Well_Data_Modified
 ); quit;
 
+/* -----------------------------------------------------------
+----------------RAIN DATA-------------------------------------
+-----------------------------------------------------------*/
+
+/*Creates and hour column and a date without time column*/
+/*Also trims data to match well data time span*/
+data hw.rain_data(keep=year month day hour rain_ft);
+	set hw.rain_data;
+	date2=datepart(date+50);      *"+50" makes the transitions between days/months/years correct;
+	hour=hour(date+1);            *"+1" makes the transitions between hours correct;
+	year=year(date2);
+	month=month(date2);
+	day=day(date2);
+	where datepart(date) >= "01Oct2007"d and datepart(date) <= "08Jun2018"d;
+	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
+run;
+
+/*Aggregate to the hour using SUM not average*/
+Proc sql;
+Create Table hw.rain_data_hourly as
+Select
+	Year, Month, Day, Hour,	sum(rain_ft) as rain
+From
+	hw.rain_data
+Group BY
+	Year, Month, Day, Hour
+Order By
+	Year, Month, Day, Hour
+; Quit;
+
+/* -----------------------------------------------------------
+----------------End RAIN DATA---------------------------------
+-----------------------------------------------------------*/
 
 /*Grouping and summing the data by taking the average for the month*/
 Proc sql;
-Create Table HW.Well_Data_Monthly as 
+Create Table HW.Well_Data_hourly as 
 Select
 	Year,
 	Month,
@@ -154,9 +194,9 @@ group by 1
 /*Joining the base time to the well data*/
 /*It should be interesting to see how many missing we have and what to do with it*/
 proc sql;
-create table HW.Well_Data_Monthly2 as
+create table HW.Well_Data_hourly2 as
 Select B.Year, B.Month, B.Day, B.Hour, M.Corrected
-From HW.Base_Time as B left join HW.Well_Data_Monthly as M
+From HW.Base_Time as B left join HW.Well_Data_hourly as M
 	on (B.Year=M.Year) and
 		(B.Month=M.Month) and
 		(B.Day=M.Day) and
@@ -171,13 +211,13 @@ From HW.Base_Time as B left join HW.Well_Data_Monthly as M
 *******************************
 ******************************/
 /**/
-Proc freq data = HW.Well_Data_Monthly2;
+Proc freq data = HW.Well_Data_hourly2;
 	tables Corrected;
 	where Corrected = .;
 run;
 
 data missing;
-	set HW.Well_Data_Monthly2;
+	set HW.Well_Data_hourly2;
 	where Corrected = .;
 run;
 
@@ -189,7 +229,7 @@ run;
 
 /*Horizontal Merge of Melissa's Data*/
 Data HW.Merged_Imputed (drop = datetime well_avg);
-merge HW.Well_Data_Monthly2 HW.Well_Imputed;
+merge HW.Well_Data_hourly2 HW.Well_Imputed;
 run;
 
 /*Checking to make sure that the imputed worked*/
