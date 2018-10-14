@@ -316,7 +316,7 @@ quit;
                ARIMAX
 ********************************************/
 
-proc arima data=plot;
+proc arima data=wellrain;
 identify var=imputed(1) nlag=60 crosscorr=(rain);
 estimate input=(rain) p=2 method=ML;
 forecast out=test;
@@ -330,10 +330,10 @@ run;
 quit;
 /*ADF test was significant -> stationary*/
 
-proc arima data=plot;
+proc arima data=wellrain;
 identify var=imputed(1) nlag=60 crosscorr=(rain);
 estimate input=(rain) p=2 q=7 method=ML;
-forecast back=168 lead=168 out=test;
+forecast back=168 lead=168 out=arimax;
 run;
 quit;
 
@@ -341,9 +341,9 @@ quit;
               Calculating MAPEs
 ********************************************/
 Data Pre_MAPE;
-	set Residuals;
+	set Residuals nobs=total;
 	Pre_MAPE = abs(RESIDUAL/Imputed);
-	if _n_ > 93513;
+	if _n_ > total-168;
 run;
 
 Proc sql;
