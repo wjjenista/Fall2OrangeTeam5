@@ -281,7 +281,8 @@ quit;
                 ESM
 ********************************************/
 
-/*Additive seasonal with Trend*/   *Derrick, I just dumped this in as a place holder . . . Bill;
+/*Additive seasonal with Trend*/
+/*****************Only adjust this section for model searching********************/
 proc esm data=HW.merged_imputed print=all plot=all 
 		 seasonality=8766 back=168 lead=168 outfor=holtwinters; 
 	forecast imputed / model=addwinters; 
@@ -303,7 +304,7 @@ quit;
 
 
 /*AR, MA terms*/
-
+/*****************Only adjust this section for model searching********************/
 proc arima data=HW.merged_imputed plot=all;
 	identify var=imputed(1) nlag=80;
 	estimate p=2 q=7 method=ml;
@@ -329,12 +330,16 @@ run;
 quit;
 /*ADF test was significant -> stationary*/
 
+
+/*****************Only adjust this section for model searching********************/
 proc arima data=hw.wellrain;
 identify var=imputed(1) nlag=60 crosscorr=(rain);
 estimate input=(rain) p=2 q=7 method=ML;
 forecast back=168 lead=168 out=arimax;
 run;
 quit;
+
+
 
 /********************************************
               Calculating MAPEs
