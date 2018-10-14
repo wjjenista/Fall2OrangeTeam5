@@ -1,8 +1,7 @@
-/*When adjusting this line for your personal directories, copy it and comment out this one for
-  ease of switching when pushing to GitHub.*/
+/*When adjusting this line for your personal directories, copy it and change the path--DON'T delete it.*/
 %let path = C:\Users\Bill\Documents\NCSU\Course Work\Fall\Visualization\Well_Data;
 
-/*Importing to a Permenat Data set. Update your path to your own local drive
+/*Importing to a Permenant Data set. Update your path to your own local drive
   Right now, each well data set has to be manually changed in this step and the proc sql step*/
 PROC IMPORT OUT= Well_Data DATAFILE= "&path.\PB-1680_T.xlsx"
             DBMS=xlsx REPLACE;
