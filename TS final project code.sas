@@ -282,10 +282,9 @@ quit;
 ********************************************/
 
 /*Additive seasonal with Trend*/   *Derrick, I just dumped this in as a place holder . . . Bill;
-ods output PerformanceStatistics=Print_Add_Seasonal_Trend;/* This will output the MAPE and other values to the called dataset for comparison */
-proc esm data=HW.Well_Data_Monthly print=all plot=all 
-		 seasonality=12 back=6 lead=6 outfor=HW.Model_Add_Seasonal_Trend; 
-	forecast Corrected / model=addwinters; 
+proc esm data=HW.merged_imputed print=all plot=all 
+		 seasonality=8766 back=168 lead=168 outfor=holtwinters; 
+	forecast imputed / model=addwinters; 
 	title "Additive Seasonal with Trend Model for Well G2866-T";
 run;
 quit;
@@ -308,7 +307,7 @@ quit;
 proc arima data=HW.merged_imputed plot=all;
 	identify var=imputed(1) nlag=80;
 	estimate p=2 q=7 method=ml;
-	forecast back=168 lead=168 out=Residuals;
+	forecast back=168 lead=168 out=arima;
 run;
 quit;
 
@@ -316,7 +315,7 @@ quit;
                ARIMAX
 ********************************************/
 
-proc arima data=wellrain;
+proc arima data=hw.wellrain;
 identify var=imputed(1) nlag=60 crosscorr=(rain);
 estimate input=(rain) p=2 method=ML;
 forecast out=test;
@@ -330,7 +329,7 @@ run;
 quit;
 /*ADF test was significant -> stationary*/
 
-proc arima data=wellrain;
+proc arima data=hw.wellrain;
 identify var=imputed(1) nlag=60 crosscorr=(rain);
 estimate input=(rain) p=2 q=7 method=ML;
 forecast back=168 lead=168 out=arimax;
@@ -340,17 +339,35 @@ quit;
 /********************************************
               Calculating MAPEs
 ********************************************/
-Data Pre_MAPE;
-	set Residuals nobs=total;
-	Pre_MAPE = abs(RESIDUAL/Imputed);
-	if _n_ > total-168;
-run;
+%let output1 = holtwinters;
+%let output2 = arima;
+%let output3 = arimax;
 
-Proc sql;
-select Sum_Residuals/Obs as MAPE
-From (Select sum(Pre_MAPE) as Sum_Residuals,
-count(Pre_Mape) as Obs from Pre_MAPE) as sum; quit;
+%macro mape;
+	%do i=1 %to 3;
+		Data Pre_MAPE&i;
+			set &&output&i nobs=total;
+			%if &&output&i ne holtwinters %then
+				Pre_MAPE&i = abs(RESIDUAL/Imputed);
+			%else
+				Pre_MAPE&i = abs(error/actual);
+			;
+			if _n_ > total-168;
+		run;
 
-/*MAPE */
-/*0.036947*/
+		Proc sql;
+			select Sum_Residuals/Obs as MAPE&i
+			from (select sum(Pre_MAPE&i) as Sum_Residuals, count(Pre_Mape&i) as Obs 
+				  from Pre_MAPE&i) as sum;
+		quit;
+	%end;
+%mend mape;
+
+%mape
+
+
+/*MAPEs */
+/*1. ESM(HW) = 0.204158*/
+/*2. ARIMA   = 0.036947*/
+/*3. ARIMAX  = 0.036721*/
 
