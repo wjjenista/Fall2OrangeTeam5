@@ -333,7 +333,7 @@ quit;
 
 /*****************Only adjust this section for model searching********************/
 proc arima data=hw.wellrain;
-identify var=imputed(1) nlag=60 crosscorr=(rain);
+identify var=imputed nlag=60 crosscorr=(rain);
 estimate input=(rain) p=2 q=7 method=ML;
 forecast back=168 lead=168 out=arimax;
 run;
