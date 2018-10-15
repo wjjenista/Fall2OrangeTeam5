@@ -193,11 +193,12 @@ run;
 		Data Pre_MAPE&i;
 			set &&well2_&i nobs=total;
 			Pre_MAPE&i = abs(RESIDUAL/&&well2_&i);
+			MAE&i = abs(Residual);
 			if _n_ > total-&span;
 		run;
 
 		Proc sql;
-			select mean(pre_mape&i) as MAPE&i
+			select mean(pre_mape&i) as MAPE&i, mean(mae&i) as MAE&i
 			from pre_mape&i;
 		quit;
 	%end;
@@ -207,6 +208,9 @@ run;
 
 /*MAPE1 0.447531 MAPE2 0.286135 MAPE3 0.295434 MAPE4 1.652198 MAPE5 0.395907 MAPE6 0.39547 MAPE7 0.536192 */
 /*MAPE8 0.343591 MAPE9 0.545699 MAPE10 0.163604 MAPE11 0.240763 MAPE12 0.234192 MAPE13 0.598407 */
+
+/*MAE1 0.335955 MAE2 0.249609 MAE3 0.244695 MAE4 0.437542 MAE5 1.610265 MAE6 1.358275 MAE7 2.947733 */
+/*MAE8 0.155911 MAE9 0.472426 MAE10 0.220836 MAE11 0.207517 MAE12 0.261382 MAE13 0.662888 */
 
 /*Reorganize data for Tableau plotting*/
 %macro organize;
