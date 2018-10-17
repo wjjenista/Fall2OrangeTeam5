@@ -384,7 +384,6 @@ quit;
 %let output1 = holtwinters;
 %let output2 = arima;
 %let output3 = arimax;
-%let output4 = ucm;
 
 %macro mape;
 	%do i=1 %to 4;
