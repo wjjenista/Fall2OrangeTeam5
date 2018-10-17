@@ -376,20 +376,7 @@ estimate input=(rain) p=2 q=7 method=ML;
 forecast back=168 lead=168 out=arimax;
 run;
 quit;
-/********************************************
-               UCM
-********************************************/
-/**/
-/*proc ucm data=hw.wellrain;*/
-/*	cycle period=720;*/
-/*	estimate;*/
-/*	forecast back=24 lead=24 outfor=ucm;*/
-/*	irregular;*/
-/*	level;*/
-/*	model imputed=rain;*/
-/*	season length=24 type=trig;*/
-/*	slope;*/
-/*run;*/
+
 
 /********************************************
               Calculating MAPEs
