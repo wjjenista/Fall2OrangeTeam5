@@ -315,10 +315,37 @@ quit;
 /********************************************
                ARIMAX
 ********************************************/
+data wellrain2;
+set hw.wellrain;
+run;
 
-proc arima data=hw.wellrain;
-identify var=imputed(1) nlag=60 crosscorr=(rain);
-estimate input=(rain) p=2 method=ML;
+/* Creating lag variables */
+data wellrain2;
+set wellrain2;
+rain1=lag1(rain);
+rain2=lag2(rain);
+rain3=lag3(rain);
+rain4=lag4(rain);
+rain5=lag5(rain);
+rain6=lag6(rain);
+rain7=lag7(rain);
+rain8=lag8(rain);
+rain9=lag9(rain);
+rain10=lag10(rain);
+rain11=lag11(rain);
+rain12=lag12(rain);
+rain24=lag24(rain);
+rain25=lag25(rain);
+rain720=lag720(rain);
+rain2192=lag2192(rain);
+rain8766=lag8766(rain);
+imputed1=lag1(imputed);
+imputed2=lag2(imputed);
+run;
+
+proc arima data=wellrain2;
+identify var=imputed nlag=60 crosscorr=(rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10 rain11 rain12 rain24 rain25 rain720 rain2192 rain8766);
+estimate input=(rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10 rain11 rain12 rain24 rain25 rain720 rain2192 rain8766) p=2 method=ML;
 forecast out=test;
 run;
 quit;
@@ -330,16 +357,39 @@ run;
 quit;
 /*ADF test was significant -> stationary*/
 
+proc glmselect data=wellrain2;
+model imputed=rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10 rain11 rain12 rain24 rain25 rain720 rain2192 rain8766 imputed1 imputed2/selection=backward select=AIC;
+run;
+quit;
 
 /*****************Only adjust this section for model searching********************/
-proc arima data=hw.wellrain;
-identify var=imputed nlag=60 crosscorr=(rain);
-estimate input=(rain) p=2 q=7 method=ML;
+proc arima data=wellrain2;
+identify var=imputed(1,2500) nlag=80 crosscorr=(rain);
+estimate input=((1,2,3) /(1) rain) p=1 method=ML;
 forecast back=168 lead=168 out=arimax;
 run;
 quit;
 
-
+proc arima data=hw.wellrain;
+identify var=imputed(1) nlag=80 crosscorr=(rain);
+estimate input=(rain) p=2 q=7 method=ML;
+forecast back=168 lead=168 out=arimax;
+run;
+quit;
+/********************************************
+               UCM
+********************************************/
+/**/
+/*proc ucm data=hw.wellrain;*/
+/*	cycle period=720;*/
+/*	estimate;*/
+/*	forecast back=24 lead=24 outfor=ucm;*/
+/*	irregular;*/
+/*	level;*/
+/*	model imputed=rain;*/
+/*	season length=24 type=trig;*/
+/*	slope;*/
+/*run;*/
 
 /********************************************
               Calculating MAPEs
@@ -347,9 +397,10 @@ quit;
 %let output1 = holtwinters;
 %let output2 = arima;
 %let output3 = arimax;
+%let output4 = ucm;
 
 %macro mape;
-	%do i=1 %to 3;
+	%do i=1 %to 4;
 		Data Pre_MAPE&i;
 			set &&output&i nobs=total;
 			%if &&output&i ne holtwinters %then
@@ -374,5 +425,8 @@ quit;
 /*MAPEs */
 /*1. ESM(HW) = 0.204158*/
 /*2. ARIMA   = 0.036947*/
-/*3. ARIMAX  = 0.036721*/
+/*3. ARIMAX  = 0.007948*/
+/*4. ARIMAX2 = 0.036721*/
+/*5. UCM     = */
+
 
