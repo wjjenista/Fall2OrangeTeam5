@@ -424,9 +424,6 @@ quit;
 
 /*MAPEs */
 /*1. ESM(HW) = 0.204158*/
-/*2. ARIMA   = 0.036947*/
+/*2. ARIMA   = 0.036947  -- This is the model for our final report*/
 /*3. ARIMAX  = 0.007948*/
 /*4. ARIMAX2 = 0.036721*/
-/*5. UCM     = */
-
-
