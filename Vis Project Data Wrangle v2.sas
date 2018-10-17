@@ -301,6 +301,13 @@ data visproj.fortableau;
 	end;
 run;
 
-proc export data=visproj.fortableau outfile="&path.\allwellstableau.csv"
+data visproj.fortableau;
+	set visproj.fortableau;
+	datetime = dhms(date, hour, 0, 0);
+	CI_95 = u95-l95;
+	format datetime datetime20.;
+run;
+
+proc export data=visproj.fortableau2 outfile="&path.\allwellstableau.csv"
             DBMS=csv REPLACE;
 run;
