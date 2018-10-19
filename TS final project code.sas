@@ -103,7 +103,7 @@ data hw.rain_data(keep=year month day hour rain_ft);
 	month=month(date2);
 	day=day(date2);
 	where datepart(date) >= "01Oct2007"d and datepart(date) <= "08Jun2018"d;
-	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
+	if (Year = 2018) and (Month = 6) and (Day = 8) and (Hour>=10) then delete;
 run;
 
 /*Aggregate to the hour using SUM not average*/
@@ -133,7 +133,7 @@ data hw.tide_data(drop=date);
 	set hw.tide_data;
 	date = mdy(month,day,year);
 	if date >= "01Oct2007"d and date <= "08Jun2018"d;
-	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
+	if (Year = 2018) and (Month = 6) and (Day = 8) and (Hour>=10) then delete;
 run;
 
 /*Aggregate to the hour using mean of the tide measurements*/
@@ -153,7 +153,7 @@ Order By
 ----------------End TIDE DATA---------------------------------
 -----------------------------------------------------------*/
 
-/*Grouping and summing the data by taking the average for the month*/
+/*Grouping and summing the data by taking the average for the hour*/
 Proc sql;
 Create Table HW.Well_Data_hourly as 
 Select
