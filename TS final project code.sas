@@ -432,19 +432,18 @@ estimate input=((1,2,3,5) rain) p=2 q=8 method=ML;
 forecast back=168 lead=168 out=arimax;
 run;
 quit;
-/*0.008366 WN43*/
+/*0.008366*/
 
 /********************************************
                     UCM
 ********************************************/
-proc ucm data=welltiderain2;
-level;
-season length=24 type=trig;    *only one type of season allowed;
-irregular;                     
-estimate plot=(acf pacf wn);
-model imputed=rain;
-forecast back=168 lead=168 out=ucm; 
-run;
+/*proc ucm data=welltiderain2;*/
+/*level;*/
+/*irregular;                     */
+/*estimate plot=(acf pacf wn);*/
+/*model imputed=rain;*/
+/*forecast back=168 lead=168 out=ucm; */
+/*run;*/
 
 /********************************************
               Calculating MAPEs
