@@ -31,6 +31,13 @@ PROC IMPORT OUT= HW.Rain_Data DATAFILE= "&path.\G-2866_T.xlsx"
      GETNAMES=YES;
 RUN;
 
+/*Importing tide data*/
+data HW.Tide_Data(drop=junk);
+	infile "&path.\station_8722859.csv" dlm=",:/";
+	if _n_ = 1 then input;
+	else input month day year hour junk tide;
+RUN;
+
 /*Importing the Imputed values from R Code*/
 PROC IMPORT OUT= HW.Well_Imputed DATAFILE= "C:\Users\derri\Documents\NC State Classes\Time Series\Data\well_imputed.csv" 
             DBMS=csv REPLACE; 
@@ -114,6 +121,36 @@ Order By
 
 /* -----------------------------------------------------------
 ----------------End RAIN DATA---------------------------------
+-----------------------------------------------------------*/
+
+/* -----------------------------------------------------------
+----------------TIDE DATA-------------------------------------
+-----------------------------------------------------------*/
+
+/*Creates and hour column and a date without time column*/
+/*Also trims data to match well data time span*/
+data hw.tide_data(drop=date);
+	set hw.tide_data;
+	date = mdy(month,day,year);
+	if date >= "01Oct2007"d and date <= "08Jun2018"d;
+	if (Year = 2018) and (Month = 6) and (Day >= 8) and (Hour>=10) then delete;
+run;
+
+/*Aggregate to the hour using mean of the tide measurements*/
+Proc sql;
+Create Table hw.tide_data_hourly as
+Select
+	Year, Month, Day, Hour,	mean(tide) as tide
+From
+	hw.tide_data
+Group BY
+	Year, Month, Day, Hour
+Order By
+	Year, Month, Day, Hour
+; Quit;
+
+/* -----------------------------------------------------------
+----------------End TIDE DATA---------------------------------
 -----------------------------------------------------------*/
 
 /*Grouping and summing the data by taking the average for the month*/
@@ -245,18 +282,23 @@ data HW.Merged_Imputed;
 	if (Year = 2018) and (Month = 6) and (Day > 8) then delete;
 run;
 
-/*Merge rain data with well data*/
-data HW.wellrain;
-	merge hw.merged_imputed hw.rain_data_hourly;
+/*Merge rain and tide data with well data*/
+data HW.welltiderain;
+	merge hw.merged_imputed hw.rain_data_hourly hw.tide_data_hourly;
 	by year month day hour;
 run;
 
-/*Check for missing values in rain*/
-proc freq data = hw.wellrain;
+/*Check for missing values in rain or tide*/
+proc freq data = hw.welltiderain;
 	tables rain;
 	where rain = .;
 run;
 /*Results: no missing values for Rain -- Would have put zero for missing values as most likely there was no rain*/
+proc freq data = hw.welltiderain;
+	tables tide;
+	where tide = .;
+run;
+/*The tide data ends on Sept 26, 2017 at 13:00. Missing after that time */
 
 /*Plot time series*/
 proc timeseries data=HW.merged_imputed plots=(series decomp);
@@ -315,37 +357,56 @@ quit;
 /********************************************
                ARIMAX
 ********************************************/
-data wellrain2;
-set hw.wellrain;
+data welltiderain2;
+set hw.welltiderain;
 run;
 
 /* Creating lag variables */
-data wellrain2;
-set wellrain2;
-rain1=lag1(rain);
-rain2=lag2(rain);
-rain3=lag3(rain);
-rain4=lag4(rain);
-rain5=lag5(rain);
-rain6=lag6(rain);
-rain7=lag7(rain);
-rain8=lag8(rain);
-rain9=lag9(rain);
-rain10=lag10(rain);
-rain11=lag11(rain);
-rain12=lag12(rain);
-rain24=lag24(rain);
-rain25=lag25(rain);
-rain720=lag720(rain);
-rain2192=lag2192(rain);
-rain8766=lag8766(rain);
-imputed1=lag1(imputed);
-imputed2=lag2(imputed);
+data welltiderain2;
+	set welltiderain2;
+	rain1=lag1(rain);
+	rain2=lag2(rain);
+	rain3=lag3(rain);
+	rain4=lag4(rain);
+	rain5=lag5(rain);
+	rain6=lag6(rain);
+	rain7=lag7(rain);
+	rain8=lag8(rain);
+	rain9=lag9(rain);
+	rain10=lag10(rain);
+	rain11=lag11(rain);
+	rain12=lag12(rain);
+	rain24=lag24(rain);
+	rain25=lag25(rain);
+	rain720=lag720(rain);
+	rain2192=lag2192(rain);
+	rain8766=lag8766(rain);
+	imputed1=lag1(imputed);
+	imputed2=lag2(imputed);
+	tide1=lag1(tide);
+	tide2=lag2(tide);
+	tide3=lag3(tide);
+	tide4=lag4(tide);
+	tide5=lag5(tide);
+	tide6=lag6(tide);
+	tide7=lag7(tide);
+	tide8=lag8(tide);
+	tide9=lag9(tide);
+	tide10=lag10(tide);
+	tide11=lag11(tide);
+	tide12=lag12(tide);
+	tide24=lag24(tide);
+	tide25=lag25(tide);
+/*	if tide ne .;        *Only use this line to drop end of data due to no tide data after indicated date above;*/
 run;
 
-proc arima data=wellrain2;
-identify var=imputed nlag=60 crosscorr=(rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10 rain11 rain12 rain24 rain25 rain720 rain2192 rain8766);
-estimate input=(rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10 rain11 rain12 rain24 rain25 rain720 rain2192 rain8766) p=2 method=ML;
+proc arima data=welltiderain2;
+identify var=imputed nlag=60 crosscorr=(rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10
+                                        rain11 rain12 rain24 rain25 rain720 rain2192 tide tide1 tide2 tide3
+										tide4 tide5 tide6 tide7 tide8 tide9 tide10 tide11 tide12 tide24 tide25);
+estimate input=(rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10 rain11 rain12 rain24 rain25 
+				rain720 rain2192 tide tide1 tide2 tide3	tide4 tide5 tide6 tide7 tide8 tide9 tide10 tide11
+				tide12 tide24 tide25) p=2 method=ML;
 forecast out=test;
 run;
 quit;
@@ -357,26 +418,33 @@ run;
 quit;
 /*ADF test was significant -> stationary*/
 
-proc glmselect data=wellrain2;
-model imputed=rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10 rain11 rain12 rain24 rain25 rain720 rain2192 rain8766 imputed1 imputed2/selection=backward select=AIC;
+proc glmselect data=welltiderain2;
+model imputed=rain rain1 rain2 rain3 rain4 rain5 rain6 rain7 rain8 rain9 rain10 rain11 rain12
+              rain24 rain25 rain720 rain2192 rain8766 imputed1 imputed2 tide tide1 tide2 tide3
+			  tide4 tide5 tide6 tide7 tide8 tide9 tide10 tide11 tide12 tide24 tide25/selection=backward select=AIC;
 run;
 quit;
 
 /*****************Only adjust this section for model searching********************/
-proc arima data=wellrain2;
-identify var=imputed(1,2500) nlag=80 crosscorr=(rain);
-estimate input=((1,2,3) /(1) rain) p=1 method=ML;
+proc arima data=welltiderain2;
+identify var=imputed nlag=60 crosscorr=(rain);
+estimate input=((1,2,3,5) rain) p=2 q=8 method=ML;
 forecast back=168 lead=168 out=arimax;
 run;
 quit;
+/*0.008366 WN43*/
 
-proc arima data=hw.wellrain;
-identify var=imputed(1) nlag=80 crosscorr=(rain);
-estimate input=(rain) p=2 q=7 method=ML;
-forecast back=168 lead=168 out=arimax;
+/********************************************
+                    UCM
+********************************************/
+proc ucm data=welltiderain2;
+level;
+season length=24 type=trig;    *only one type of season allowed;
+irregular;                     
+estimate plot=(acf pacf wn);
+model imputed=rain;
+forecast back=168 lead=168 out=ucm; 
 run;
-quit;
-
 
 /********************************************
               Calculating MAPEs
@@ -384,6 +452,7 @@ quit;
 %let output1 = holtwinters;
 %let output2 = arima;
 %let output3 = arimax;
+%let output4 = ucm;
 
 %macro mape;
 	%do i=1 %to 4;
@@ -411,5 +480,5 @@ quit;
 /*MAPEs */
 /*1. ESM(HW) = 0.204158*/
 /*2. ARIMA   = 0.036947  -- This is the model for our final report*/
-/*3. ARIMAX  = 0.007948*/
-/*4. ARIMAX2 = 0.036721*/
+/*3. ARIMAX  = 0.036721*/
+/*4. UCM     = */
