@@ -427,12 +427,22 @@ quit;
 
 /*****************Only adjust this section for model searching********************/
 proc arima data=welltiderain2;
-identify var=imputed nlag=60 crosscorr=(rain);
+identify var=imputed nlag=30 crosscorr=(rain);
 estimate input=((1,2,3,5) rain) p=2 q=8 method=ML;
 forecast back=168 lead=168 out=arimax;
 run;
 quit;
 /*0.008366*/
+
+data hw.forplot(keep=year month day hour imputed forecast std l95 u95 residual);
+	merge arimax welltiderain2;
+run;
+
+data hw.forplot;
+	set hw.forplot nobs=total;
+	if _n_ > total-169;
+	if _n_ = total then delete;
+run;
 
 /********************************************
                     UCM
