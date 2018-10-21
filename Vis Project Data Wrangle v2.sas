@@ -169,6 +169,8 @@ data visproj.all_wells_imputed;
 	if g852=. then g852 = 0.5289504339*g852n+0.7333016528;
 	if g860=. then g860 = 0.4091936005*g860n+1.0592613613;
 	if pb1680=. then pb1680 = 1.1237183036*pb1680n+1.0168947464;
+	if date > "08Jun2018"d or date=. then;
+	else output;
 run;
 
 %let span = 720;
@@ -206,12 +208,6 @@ run;
 
 %mape
 
-/*MAPE1 0.447531 MAPE2 0.286135 MAPE3 0.295434 MAPE4 1.652198 MAPE5 0.395907 MAPE6 0.39547 MAPE7 0.536192 */
-/*MAPE8 0.343591 MAPE9 0.545699 MAPE10 0.163604 MAPE11 0.240763 MAPE12 0.234192 MAPE13 0.598407 */
-
-/*MAE1 0.335955 MAE2 0.249609 MAE3 0.244695 MAE4 0.437542 MAE5 1.610265 MAE6 1.358275 MAE7 2.947733 */
-/*MAE8 0.155911 MAE9 0.472426 MAE10 0.220836 MAE11 0.207517 MAE12 0.261382 MAE13 0.662888 */
-
 /*Reorganize data for Tableau plotting*/
 %macro organize;
 /*	Change name of actual data to "ACTUAL" in ARIMA output datasets*/
@@ -221,11 +217,9 @@ run;
 			well = "&&well2_&i";
 		run;
 
-/*	Merge ARIMA output data with ideal date series and drop everything after June 8, 2018*/
+/*	Merge ARIMA output data with ideal date series*/
 		data &&well2_&i;
 			merge ideal &&well2_&i;
-			if date > "08Jun2018"d or date=. then;
-			else output;
 		run;
 	%end;
 %mend organize;
@@ -242,60 +236,100 @@ run;
 
 %combine
 
+/*Add Lat and Long coordinates as well as MAPE, MAE, and model*/
 data visproj.fortableau;
 	set visproj.fortableau;
 	select(strip(well));
 		when('G3549') do;
 			latitude = 25.49305556;
 			longitude = -80.34916667;
+			MAPE = 0.578721; 
+			MAE = 0.187873;
+			Model = "Arima(2,1,7)";
 			end;
 		when('G860') do;
 			latitude = 25.62194444;
 			longitude = -80.32277778;
+			MAPE = 0.318903 ; 
+			MAE = 0.271878;
+			Model = "Arima(2,1,7)";
 			end;
 		when('G580') do;
 			latitude = 25.66722222;
 			longitude = -80.30250000;
+			MAPE = 0.29329; 
+			MAE = 0.38472;
+			Model = "Arima(2,1,7)";
 			end;
 		when('F179') do;
 			latitude = 25.74555556;
 			longitude = -80.24638889;
+			MAPE = 0.915321; 
+			MAE = 0.885944;
+			Model = "Arima(2,1,7)";
 			end;
 		when('F319') do;
 			latitude = 25.70472222;
 			longitude = -80.28833333;
+			MAPE = 0.353586; 
+			MAE = 0.368216;
+			Model = "Arima(2,1,7)";
 			end;
 		when('F45') do;
 			latitude = 25.82888889;
 			longitude = -80.20416667;
+			MAPE =0.975333; 
+			MAE = 1.082993;
+			Model = "Arima(2,1,7)";
 			end;
 		when('G852') do;
 			latitude = 25.91027778;
 			longitude = -80.17555556;
+			MAPE = 0.688452; 
+			MAE = 1.0161791;
+			Model = "Arima(2,1,7)";
 			end;
 		when('G561') do;
 			latitude = 26.09583333;
 			longitude = -80.13888889;
+			MAPE = 0.610515; 
+			MAE = 1.296146;
+			Model = "Arima(2,1,7)";
 			end;
 		when('G1220') do;
 			latitude = 26.13111111;
 			longitude = -80.14638889;
+			MAPE = 2.114E12; 
+			MAE = 1.2682;
+			Model = "Arima(2,1,7)";
 			end;
 		when('G2147') do;
 			latitude = 26.25055556;
 			longitude = -80.10138889;
+			MAPE = 0.317931; 
+			MAE = 1.5564261;
+			Model = "Arima(2,1,7)";
 			end;
 		when('G1260') do;
 			latitude = 26.31777778;
 			longitude = -80.11527778;
+			MAPE = 0.429088; 
+			MAE = 2.520005;
+			Model = "Arima(2,1,7)";
 			end;
 		when('G2866') do;
 			latitude = 26.27805556;
 			longitude = -80.11305556;
+			MAPE = 0.355103; 
+			MAE = 2.920378;
+			Model = "Arima(2,1,7)";
 			end;
 		when('PB1680') do;
 			latitude = 26.36666667;
 			longitude = -80.09472222;
+			MAPE = 1.083209; 
+			MAE = 1.809895;
+			Model = "Arima(2,1,7)";
 			end;
 		otherwise;
 	end;
@@ -308,6 +342,6 @@ data visproj.fortableau;
 	format datetime datetime20.;
 run;
 
-proc export data=visproj.fortableau2 outfile="&path.\allwellstableau.csv"
+proc export data=visproj.fortableau outfile="&path.\allwellstableau.csv"
             DBMS=csv REPLACE;
 run;
