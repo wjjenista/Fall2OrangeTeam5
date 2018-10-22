@@ -79,7 +79,7 @@ run;
 data ideal(keep = date hour);
 	date = "01Oct2007"d;
 	format date MMDDYY10.;
-	do until (date = "06Jul2018"d and hour = 23);
+	do until (date = "08Jun2018"d and hour = 23);
 		do i = 0 to 23;
 			hour = i;
 			output;
